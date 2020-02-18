@@ -304,7 +304,7 @@ Just pass or fail
 
 Similar to C<is> and C<isnt> compare values with C<eq> and C<ne>.
 
-    $arr->expect('FOO')->got(us 'foo')->is;
+    $arr->expect('FOO')->got(uc 'foo')->is;
 
 =head3 is_num
 
@@ -318,7 +318,7 @@ Similar to C<is_num> and C<isnt_num> compare values with C<==> and C<!=>.
 
 The $got will be compare with expected value.
 
-    $arr->expect(us 'foo')->to_be('FOO');
+    $arr->expect(uc 'foo')->to_be('FOO');
 
 =head3 like
 
