@@ -30,3 +30,4 @@
 ^MYMETA\.*$
 ^Test-Arrow-*^MYMETA\.yml$
 ^MYMETA\.json$
+^MYMETA\.yml$
