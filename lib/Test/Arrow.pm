@@ -318,7 +318,11 @@ Just pass or fail
 
 =head3 ok
 
-    $arr->got($true);
+    $arr->got($true)->ok;
+
+More easy,
+
+    $arr->ok($true);
 
 =head3 is
 
@@ -352,7 +356,7 @@ C<like> matches $got value against the $expected regex.
 
 =head2 UTILITIES
 
-You can call below utilities even without an instance.
+You can call below utilities methods even without an instance.
 
 =head3 diag
 
@@ -380,7 +384,7 @@ If you call C<explain> method without args, then C<explain> method outputs objec
     # }
     ok 1 - foo
 
-If you call C<explain> method with arg, then C<explain> method dumps it.
+If you call C<explain> method with arg, then C<explain> method just dumps it.
 
     $arr->expected('BAR')->got(uc 'bar')->explain({ baz => 123 })->is;
     # {
