@@ -41,13 +41,13 @@ sub _reset {
 sub pass {
     my $self = shift;
 
-    Test::Arrow->builder->ok(1, @_);
+    $KLASS->builder->ok(1, @_);
 }
 
 sub fail {
     my $self = shift;
 
-    Test::Arrow->builder->ok(0, @_);
+    $KLASS->builder->ok(0, @_);
 }
 
 sub name {
