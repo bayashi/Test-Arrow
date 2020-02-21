@@ -41,13 +41,13 @@ sub _reset {
 sub pass {
     my $self = shift;
 
-    Test::Arrow->builder->ok(1, @_);
+    $KLASS->builder->ok(1, @_);
 }
 
 sub fail {
     my $self = shift;
 
-    Test::Arrow->builder->ok(0, @_);
+    $KLASS->builder->ok(0, @_);
 }
 
 sub name {
@@ -318,7 +318,11 @@ Just pass or fail
 
 =head3 ok
 
-    $arr->got($true);
+    $arr->got($true)->ok;
+
+More easy,
+
+    $arr->ok($true);
 
 =head3 is
 
@@ -352,7 +356,7 @@ C<like> matches $got value against the $expected regex.
 
 =head2 UTILITIES
 
-You can call below utilities even without an instance.
+You can call below utilities methods even without an instance.
 
 =head3 diag
 
@@ -380,7 +384,7 @@ If you call C<explain> method without args, then C<explain> method outputs objec
     # }
     ok 1 - foo
 
-If you call C<explain> method with arg, then C<explain> method dumps it.
+If you call C<explain> method with arg, then C<explain> method just dumps it.
 
     $arr->expected('BAR')->got(uc 'bar')->explain({ baz => 123 })->is;
     # {
@@ -402,7 +406,7 @@ B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
 =begin html
 
-<a href="https://github.com/bayashi/Test-Arrow/blob/master/README.pod"><img src="https://img.shields.io/badge/Version-0.04-green?style=flat"></a> <a href="https://github.com/bayashi/Test-Arrow/blob/master/LICENSE"><img src="https://img.shields.io/badge/LICENSE-Artistic%202.0-GREEN.png"></a> <a href="https://github.com/bayashi/Test-Arrow/actions"><img src="https://github.com/bayashi/Test-Arrow/workflows/build/badge.svg?_t=1582295755&branch=master"/></a> <a href="https://coveralls.io/r/bayashi/Test-Arrow"><img src="https://coveralls.io/repos/bayashi/Test-Arrow/badge.png?_t=1582295755&branch=master"/></a>
+<a href="https://github.com/bayashi/Test-Arrow/blob/master/README.pod"><img src="https://img.shields.io/badge/Version-0.04-green?style=flat"></a> <a href="https://github.com/bayashi/Test-Arrow/blob/master/LICENSE"><img src="https://img.shields.io/badge/LICENSE-Artistic%202.0-GREEN.png"></a> <a href="https://github.com/bayashi/Test-Arrow/actions"><img src="https://github.com/bayashi/Test-Arrow/workflows/master/badge.svg?_t=1582295755"/></a> <a href="https://coveralls.io/r/bayashi/Test-Arrow"><img src="https://coveralls.io/repos/bayashi/Test-Arrow/badge.png?_t=1582295755&branch=master"/></a>
 
 =end html
 
