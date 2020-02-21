@@ -11,6 +11,19 @@ our @ISA = qw/Test::Builder::Module/;
 
 my $KLASS = __PACKAGE__;
 
+sub import {
+    my $pkg  = shift;
+    my %args = map { $_ => 1 } @_;
+
+    my $binary = delete $args{binary} or delete $args{binary_mode}
+                    or delete $args{not_utf8} or delete $args{'-utf8'} or delete $args{'-utf'};
+    if (!$binary) {
+        binmode $pkg->builder->$_, ':utf8' for qw(failure_output todo_output output);
+        require utf8;
+        utf8->import;
+    }
+}
+
 sub new {
     bless {}, shift;
 }
@@ -239,6 +252,15 @@ The opposite DSL.
 =head2 MOTIVATION
 
 B<Test::Arrow> is a testing helper as object-oriented operation. Perl5 has a lot of testing libraries. These libraries have nice DSL ways. However, sometimes we hope the Object as similar to ORM. It may slightly sound strange. But it'd be better to clarify operations and it's easy to understand what/how it is. Although there are so many arrows.
+
+
+=head1 IMPORT OPTIONS
+
+=head2 binary
+
+By default, C<Test::Arrow> sets utf8 pragma globally to avoid warnings such as "Wide charactors". If you don't want it, then you should pass 'binary' option on use.
+
+    use Test::Arrow 'binary'; # utf8 pragma off
 
 
 =head1 METHODS
