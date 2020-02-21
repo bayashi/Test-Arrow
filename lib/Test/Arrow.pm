@@ -9,7 +9,7 @@ our $VERSION = '0.03';
 
 our @ISA = qw/Test::Builder::Module/;
 
-my $CLASS = __PACKAGE__;
+my $KLASS = __PACKAGE__;
 
 sub new {
     bless {}, shift;
@@ -82,7 +82,7 @@ sub ok {
     my $got = $self->_specific('_got', $value);
     my $test_name = defined $name ? $name : $self->{_name};
 
-    $CLASS->builder->ok($got, $test_name);
+    $KLASS->builder->ok($got, $test_name);
 
     $self->_reset;
 
@@ -95,7 +95,7 @@ sub to_be {
     my $expected = $self->{_expected};
     my $test_name = $self->_specific('_name', $name);
 
-    my $ret = $CLASS->builder->is_eq($got, $expected, $test_name);
+    my $ret = $KLASS->builder->is_eq($got, $expected, $test_name);
 
     $self->_reset;
 
@@ -111,7 +111,7 @@ sub _test {
     my $test_name = $self->_specific('_name', $_[2]);
 
     local $Test::Builder::Level = 2;
-    my $ret = $CLASS->builder->$method($got, $expected, $test_name);
+    my $ret = $KLASS->builder->$method($got, $expected, $test_name);
 
     $self->_reset;
 
@@ -135,14 +135,14 @@ sub unlike {
     my $expected = $self->_specific('_expected', $_[1]);
     my $test_name = $self->_specific('_name', $_[2]);
 
-    my $ret = $CLASS->builder->unlike($got, $expected, $test_name);
+    my $ret = $KLASS->builder->unlike($got, $expected, $test_name);
 
     $self->_reset;
 
     return $ret if $ret eq '1';
 
     my $pos = Text::MatchedPosition->new($got, $expected);
-    return $CLASS->builder->diag( sprintf <<'DIAGNOSTIC', $pos->line, $pos->offset );
+    return $KLASS->builder->diag( sprintf <<'DIAGNOSTIC', $pos->line, $pos->offset );
           matched at line: %d, offset: %d
 DIAGNOSTIC
 }
@@ -150,7 +150,7 @@ DIAGNOSTIC
 sub diag {
     my $self = shift;
 
-    $CLASS->builder->diag(@_);
+    $KLASS->builder->diag(@_);
 
     $self;
 }
@@ -158,7 +158,7 @@ sub diag {
 sub note {
     my $self = shift;
 
-    $CLASS->builder->note(@_);
+    $KLASS->builder->note(@_);
 
     $self;
 }
@@ -172,10 +172,10 @@ sub explain {
             expected => $self->{_expected},
             name     => $self->{_name},
         };
-        $self->diag($CLASS->builder->explain($hash));
+        $self->diag($KLASS->builder->explain($hash));
     }
     else {
-        $self->diag($CLASS->builder->explain(@_));
+        $self->diag($KLASS->builder->explain(@_));
     }
 
     $self;
@@ -184,7 +184,7 @@ sub explain {
 sub done_testing {
     my $self = shift;
 
-    $CLASS->builder->done_testing(@_);
+    $KLASS->builder->done_testing(@_);
 
     $self;
 }
