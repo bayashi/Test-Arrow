@@ -207,6 +207,39 @@ sub done_testing {
     $self;
 }
 
+# Mostly copied from Test::More::can_ok
+sub can_ok {
+    my($self, $proto, @methods) = @_;
+
+    my $class = ref $proto || $proto;
+    my $tb = $KLASS->builder;
+
+    unless($class) {
+        my $ok = $tb->ok(0, "->can(...)");
+        $tb->diag('    can_ok() called with empty class or reference');
+        return $ok;
+    }
+
+    unless(@methods) {
+        my $ok = $tb->ok(0, "$class->can(...)");
+        $tb->diag('    can_ok() called with no methods');
+        return $ok;
+    }
+
+    my @nok = ();
+    for my $method (@methods) {
+        $tb->_try(sub { $proto->can($method) }) or push @nok, $method;
+    }
+
+    my $name = scalar @methods == 1 ? "$class->can('$methods[0]')" : "$class->can(...)";
+
+    my $ok = $tb->ok(!@nok, $name);
+
+    $tb->diag(map "    $class->can('$_') failed\n", @nok);
+
+    return $ok;
+}
+
 1;
 
 __END__
@@ -358,6 +391,15 @@ The $got will be compare with expected value.
 C<like> matches $got value against the $expected regex.
 
     $arr->expect(qr/b/)->got('abc')->like;
+
+=head3 can_ok($class, @methods)
+
+Checks to make sure the $module or $object can do these @methods
+(works with functions, too).
+
+    Test::Arrow->can_ok($class, @methods);
+    Test::Arrow->can_ok($object, @methods);
+
 
 =head2 UTILITIES
 
