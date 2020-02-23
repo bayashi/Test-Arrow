@@ -55,6 +55,10 @@ sub fail {
     $KLASS->builder->ok(0, @_);
 }
 
+sub BAIL_OUT {
+    $KLASS->builder->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
+}
+
 sub name {
     my ($self, $name) = @_;
 
