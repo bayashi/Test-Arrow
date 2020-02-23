@@ -207,6 +207,133 @@ sub done_testing {
     $self;
 }
 
+# Mostly copied from Test::More::can_ok
+sub can_ok {
+    my($self, $proto, @methods) = @_;
+
+    my $class = ref $proto || $proto;
+    my $tb = $KLASS->builder;
+
+    unless($class) {
+        my $ok = $tb->ok(0, "->can(...)");
+        $tb->diag('    can_ok() called with empty class or reference');
+        return $ok;
+    }
+
+    unless(@methods) {
+        my $ok = $tb->ok(0, "$class->can(...)");
+        $tb->diag('    can_ok() called with no methods');
+        return $ok;
+    }
+
+    my @nok = ();
+    for my $method (@methods) {
+        $tb->_try(sub { $proto->can($method) }) or push @nok, $method;
+    }
+
+    my $name = scalar @methods == 1 ? "$class->can('$methods[0]')" : "$class->can(...)";
+
+    my $ok = $tb->ok(!@nok, $name);
+
+    $tb->diag(map "    $class->can('$_') failed\n", @nok);
+
+    return $ok;
+}
+
+# Mostly copied from Test::More::isa_ok
+sub isa_ok {
+    my $self = shift;
+
+    my $got = $self->_specific('_got', $_[0]);
+    my $expected = $self->_specific('_expected', $_[1]);
+    my $test_name = $self->_specific('_name', $_[2]);
+
+    my $tb = $KLASS->builder;
+
+    my $whatami = 'class';
+    if (!defined $got) {
+        $whatami = 'undef';
+    }
+    elsif (ref $got) {
+        $whatami = 'reference';
+
+        local($@, $!);
+        require Scalar::Util;
+        if(Scalar::Util::blessed($got)) {
+            $whatami = 'object';
+        }
+    }
+
+    # We can't use UNIVERSAL::isa because we want to honor isa() overrides
+    my ($result, $error) = $tb->_try(sub { $got->isa($expected) });
+
+    if ($error) {
+        die <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
+WHOA! I tried to call ->isa on your $whatami and got some weird error.
+Here's the error.
+$error
+WHOA
+    }
+
+    # Special case for isa_ok( [], "ARRAY" ) and like
+    if ($whatami eq 'reference') {
+        $result = UNIVERSAL::isa($got, $expected);
+    }
+
+    my ($diag, $name) = $self->_get_isa_diag_name($whatami, $got, $expected, $test_name);
+
+    my $ok;
+    if ($result) {
+        $ok = $tb->ok(1, $name);
+    }
+    else {
+        $ok = $tb->ok(0, $name);
+        $tb->diag("    $diag\n");
+    }
+
+    $self->_reset;
+
+    return $ok;
+}
+
+sub _get_isa_diag_name {
+    my ($self, $whatami, $got, $expected, $test_name) = @_;
+
+    my ($diag, $name);
+
+    if (defined $test_name) {
+        $name = "'$test_name' isa '$expected'";
+        $diag = defined $got ? "'$test_name' isn't a '$expected'" : "'$test_name' isn't defined";
+    }
+    elsif ($whatami eq 'object') {
+        my $my_class = ref $got;
+        $test_name = qq[An object of class '$my_class'];
+        $name = "$test_name isa '$expected'";
+        $diag = "The object of class '$my_class' isn't a '$expected'";
+    }
+    elsif ($whatami eq 'reference') {
+        my $type = ref $got;
+        $test_name = qq[A reference of type '$type'];
+        $name = "$test_name isa '$expected'";
+        $diag = "The reference of type '$type' isn't a '$expected'";
+    }
+    elsif ($whatami eq 'undef') {
+        $test_name = 'undef';
+        $name = "$test_name isa '$expected'";
+        $diag = "$test_name isn't defined";
+    }
+    elsif($whatami eq 'class') {
+        $test_name = qq[The class (or class-like) '$got'];
+        $name = "$test_name isa '$expected'";
+        $diag = "$test_name isn't a '$expected'";
+    }
+    else {
+        die;
+    }
+
+    return($diag, $name);
+}
+
 1;
 
 __END__
@@ -358,6 +485,25 @@ The $got will be compare with expected value.
 C<like> matches $got value against the $expected regex.
 
     $arr->expect(qr/b/)->got('abc')->like;
+
+=head3 can_ok($class, @methods)
+
+Checks to make sure the $class or $object can do these @methods
+(works with functions, too).
+
+    Test::Arrow->can_ok($class, @methods);
+    Test::Arrow->can_ok($object, @methods);
+
+=head3 isa_ok
+
+    $arr->got($got_object)->expected($class)->isa_ok;
+
+Checks to see if the given C<$got_object->isa($class)>. Also checks to make sure the object was defined in the first place.
+
+It works on references, too:
+
+    $arr->got($array_ref)->expected('ARRAY')->isa_ok;
+
 
 =head2 UTILITIES
 
