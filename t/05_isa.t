@@ -17,8 +17,8 @@ $arr->expected('Test::Arrow')
     ->got($arr)
     ->isa_ok;
 
-$arr->expected('Test::Arrow')
-    ->got($arr)
+$arr->expected('HASH')
+    ->got({})
     ->isa_ok;
 
 FROM_TEST_MORE: {
