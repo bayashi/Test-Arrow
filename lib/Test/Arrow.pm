@@ -9,8 +9,6 @@ our $VERSION = '0.07';
 
 our @ISA = qw/Test::Builder::Module/;
 
-my $KLASS = __PACKAGE__;
-
 sub import {
     my $pkg  = shift;
     my %args = map { $_ => 1 } @_;
@@ -33,6 +31,8 @@ sub new {
     bless {}, shift;
 }
 
+sub _tb { __PACKAGE__->builder }
+
 sub _reset {
     my ($self) = @_;
 
@@ -46,17 +46,17 @@ sub _reset {
 sub pass {
     my $self = shift;
 
-    $KLASS->builder->ok(1, @_);
+    _tb->ok(1, @_);
 }
 
 sub fail {
     my $self = shift;
 
-    $KLASS->builder->ok(0, @_);
+    _tb->ok(0, @_);
 }
 
 sub BAIL_OUT {
-    $KLASS->builder->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
+    _tb->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
 }
 
 sub name {
@@ -104,7 +104,7 @@ sub ok {
     my $got = $self->_specific('_got', $value);
     my $test_name = defined $name ? $name : $self->{_name};
 
-    $KLASS->builder->ok($got, $test_name);
+    _tb->ok($got, $test_name);
 
     $self->_reset;
 
@@ -117,7 +117,7 @@ sub to_be {
     my $expected = $self->{_expected};
     my $test_name = $self->_specific('_name', $name);
 
-    my $ret = $KLASS->builder->is_eq($got, $expected, $test_name);
+    my $ret = _tb->is_eq($got, $expected, $test_name);
 
     $self->_reset;
 
@@ -133,7 +133,7 @@ sub _test {
     my $test_name = $self->_specific('_name', $_[2]);
 
     local $Test::Builder::Level = 2;
-    my $ret = $KLASS->builder->$method($got, $expected, $test_name);
+    my $ret = _tb->$method($got, $expected, $test_name);
 
     $self->_reset;
 
@@ -157,14 +157,14 @@ sub unlike {
     my $expected = $self->_specific('_expected', $_[1]);
     my $test_name = $self->_specific('_name', $_[2]);
 
-    my $ret = $KLASS->builder->unlike($got, $expected, $test_name);
+    my $ret = _tb->unlike($got, $expected, $test_name);
 
     $self->_reset;
 
     return $ret if $ret eq '1';
 
     my $pos = Text::MatchedPosition->new($got, $expected);
-    return $KLASS->builder->diag( sprintf <<'DIAGNOSTIC', $pos->line, $pos->offset );
+    return _tb->diag( sprintf <<'DIAGNOSTIC', $pos->line, $pos->offset );
           matched at line: %d, offset: %d
 DIAGNOSTIC
 }
@@ -172,7 +172,7 @@ DIAGNOSTIC
 sub diag {
     my $self = shift;
 
-    $KLASS->builder->diag(@_);
+    _tb->diag(@_);
 
     $self;
 }
@@ -180,7 +180,7 @@ sub diag {
 sub note {
     my $self = shift;
 
-    $KLASS->builder->note(@_);
+    _tb->note(@_);
 
     $self;
 }
@@ -194,10 +194,10 @@ sub explain {
             expected => $self->{_expected},
             name     => $self->{_name},
         };
-        $self->diag($KLASS->builder->explain($hash));
+        $self->diag(_tb->explain($hash));
     }
     else {
-        $self->diag($KLASS->builder->explain(@_));
+        $self->diag(_tb->explain(@_));
     }
 
     $self;
@@ -206,7 +206,7 @@ sub explain {
 sub done_testing {
     my $self = shift;
 
-    $KLASS->builder->done_testing(@_);
+    _tb->done_testing(@_);
 
     $self;
 }
@@ -216,30 +216,29 @@ sub can_ok {
     my($self, $proto, @methods) = @_;
 
     my $class = ref $proto || $proto;
-    my $tb = $KLASS->builder;
 
     unless($class) {
-        my $ok = $tb->ok(0, "->can(...)");
-        $tb->diag('    can_ok() called with empty class or reference');
+        my $ok = _tb->ok(0, "->can(...)");
+        _tb->diag('    can_ok() called with empty class or reference');
         return $ok;
     }
 
     unless(@methods) {
-        my $ok = $tb->ok(0, "$class->can(...)");
-        $tb->diag('    can_ok() called with no methods');
+        my $ok = _tb->ok(0, "$class->can(...)");
+        _tb->diag('    can_ok() called with no methods');
         return $ok;
     }
 
     my @nok = ();
     for my $method (@methods) {
-        $tb->_try(sub { $proto->can($method) }) or push @nok, $method;
+        _tb->_try(sub { $proto->can($method) }) or push @nok, $method;
     }
 
     my $name = scalar @methods == 1 ? "$class->can('$methods[0]')" : "$class->can(...)";
 
-    my $ok = $tb->ok(!@nok, $name);
+    my $ok = _tb->ok(!@nok, $name);
 
-    $tb->diag(map "    $class->can('$_') failed\n", @nok);
+    _tb->diag(map "    $class->can('$_') failed\n", @nok);
 
     return $ok;
 }
@@ -251,8 +250,6 @@ sub isa_ok {
     my $got = $self->_specific('_got', $_[0]);
     my $expected = $self->_specific('_expected', $_[1]);
     my $test_name = $self->_specific('_name', $_[2]);
-
-    my $tb = $KLASS->builder;
 
     my $whatami = 'class';
     if (!defined $got) {
@@ -269,7 +266,7 @@ sub isa_ok {
     }
 
     # We can't use UNIVERSAL::isa because we want to honor isa() overrides
-    my ($result, $error) = $tb->_try(sub { $got->isa($expected) });
+    my ($result, $error) = _tb->_try(sub { $got->isa($expected) });
 
     if ($error) {
         die <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
@@ -288,11 +285,11 @@ WHOA
 
     my $ok;
     if ($result) {
-        $ok = $tb->ok(1, $name);
+        $ok = _tb->ok(1, $name);
     }
     else {
-        $ok = $tb->ok(0, $name);
-        $tb->diag("    $diag\n");
+        $ok = _tb->ok(0, $name);
+        _tb->diag("    $diag\n");
     }
 
     $self->_reset;
@@ -343,7 +340,7 @@ sub throw_ok {
 
     eval { shift->() };
 
-    $KLASS->builder->ok(!!$@, $self->_specific('_name', $_[0]));
+    _tb->ok(!!$@, $self->_specific('_name', $_[0]));
 }
 
 sub throw {
@@ -356,7 +353,7 @@ sub throw {
 
     if (my $e = $@) {
         if (defined $_[0]) {
-            $KLASS->builder->like($e, $_[0], $_[1] || 'Thrown correctly');
+            _tb->like($e, $_[0], $_[1] || 'Thrown correctly');
             $self->_reset;
         }
         else {
@@ -375,7 +372,7 @@ sub catch {
     my $self  = shift;
     my $regex = shift;
 
-    $KLASS->builder->like(
+    _tb->like(
         $self->_specific('_got', undef),
         $regex,
         $_[0] || 'Thrown correctly',
