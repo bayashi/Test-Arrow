@@ -250,25 +250,22 @@ sub isa_ok {
 
     my $tb = $KLASS->builder;
 
-    my $whatami;
+    my $whatami = 'class';
     if (!defined $got) {
         $whatami = 'undef';
     }
     elsif (ref $got) {
         $whatami = 'reference';
 
-        local ($@, $!);
+        local($@, $!);
         require Scalar::Util;
         if(Scalar::Util::blessed($got)) {
             $whatami = 'object';
         }
     }
-    else {
-        $whatami = 'class';
-    }
 
     # We can't use UNIVERSAL::isa because we want to honor isa() overrides
-    my ($rslt, $error) = $tb->_try(sub { $got->isa($expected) });
+    my ($result, $error) = $tb->_try(sub { $got->isa($expected) });
 
     if ($error) {
         die <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
@@ -280,10 +277,30 @@ WHOA
 
     # Special case for isa_ok( [], "ARRAY" ) and like
     if ($whatami eq 'reference') {
-        $rslt = UNIVERSAL::isa($got, $expected);
+        $result = UNIVERSAL::isa($got, $expected);
     }
 
+    my ($diag, $name) = $self->_get_isa_diag_name($whatami, $got, $expected, $test_name);
+
+    my $ok;
+    if ($result) {
+        $ok = $tb->ok(1, $name);
+    }
+    else {
+        $ok = $tb->ok(0, $name);
+        $tb->diag("    $diag\n");
+    }
+
+    $self->_reset;
+
+    return $ok;
+}
+
+sub _get_isa_diag_name {
+    my ($self, $whatami, $got, $expected, $test_name) = @_;
+
     my ($diag, $name);
+
     if (defined $test_name) {
         $name = "'$test_name' isa '$expected'";
         $diag = defined $got ? "'$test_name' isn't a '$expected'" : "'$test_name' isn't defined";
@@ -314,18 +331,7 @@ WHOA
         die;
     }
 
-    my $ok;
-    if ($rslt) {
-        $ok = $tb->ok(1, $name);
-    }
-    else {
-        $ok = $tb->ok(0, $name);
-        $tb->diag("    $diag\n");
-    }
-
-    $self->_reset;
-
-    return $ok;
+    return($diag, $name);
 }
 
 1;
