@@ -9,6 +9,37 @@ This is Perl module B<Test::Arrow>.
 
 =end html
 
+=head1 SYNOPSIS
+
+    use Test::Arrow;
+
+    my $arr = Test::Arrow->new;
+
+    $arr->ok(1);
+    $arr->got(1)->ok;
+
+    $arr->expect(uc 'foo')->to_be('FOO');
+
+    $arr->name('Test Name')
+        ->expected('FOO')
+        ->got(uc 'foo')
+        ->is;
+
+    $arr->expected(6)
+        ->got(2 * 3)
+        ->is_num;
+
+    # `unlike` shows where a place could have matched if it's failed
+    $arr->name('Unlike Fail example')
+        ->expected(qr/b/)
+        ->got('abc')
+        ->unlike;
+    #   Failed test 'Unlike Fail example'
+    #   at t/unlike.t line 12.
+    #                   'abc'
+    #           matches '(?^:b)'
+    #           matched at line: 1, offset: 2
+
 
 =head1 INSTALLATION
 
