@@ -362,7 +362,8 @@ sub throw {
     }
     else {
         local $Test::Builder::Level = 2;
-        $self->fail('Not thrown');
+        $self->ok(0);
+        $self->diag(q|Failed, because it's expected to throw an exeption, but not.|);
     }
 
     $self;
