@@ -9,6 +9,9 @@ our $VERSION = '0.07';
 
 our @ISA = qw/Test::Builder::Module/;
 
+sub PASS { 1 }
+sub FAIL { 0 }
+
 sub import {
     my $pkg  = shift;
     my %args = map { $_ => 1 } @_;
@@ -43,17 +46,8 @@ sub _reset {
     $self;
 }
 
-sub pass {
-    my $self = shift;
-
-    _tb->ok(1, @_);
-}
-
-sub fail {
-    my $self = shift;
-
-    _tb->ok(0, @_);
-}
+sub pass { shift; _tb->ok(PASS, @_) }
+sub fail { shift; _tb->ok(FAIL, @_) }
 
 sub BAIL_OUT {
     _tb->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
@@ -218,13 +212,13 @@ sub can_ok {
     my $class = ref $proto || $proto;
 
     unless($class) {
-        my $ok = _tb->ok(0, "->can(...)");
+        my $ok = _tb->ok(FAIL, "->can(...)");
         _tb->diag('    can_ok() called with empty class or reference');
         return $ok;
     }
 
     unless(@methods) {
-        my $ok = _tb->ok(0, "$class->can(...)");
+        my $ok = _tb->ok(FAIL, "$class->can(...)");
         _tb->diag('    can_ok() called with no methods');
         return $ok;
     }
@@ -285,10 +279,10 @@ WHOA
 
     my $ok;
     if ($result) {
-        $ok = _tb->ok(1, $name);
+        $ok = _tb->ok(PASS, $name);
     }
     else {
-        $ok = _tb->ok(0, $name);
+        $ok = _tb->ok(FAIL, $name);
         _tb->diag("    $diag\n");
     }
 
@@ -361,8 +355,7 @@ sub throw {
         }
     }
     else {
-        local $Test::Builder::Level = 2;
-        $self->ok(0);
+        _tb->ok(FAIL);
         $self->diag(q|Failed, because it's expected to throw an exeption, but not.|);
     }
 
@@ -633,6 +626,17 @@ Declare of done testing.
     Test::Arrow->done_testing;
 
 B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
+
+
+=head2 CONSTANTS
+
+=head3 PASS
+
+1
+
+=head3 FAIL
+
+0
 
 
 =head1 REPOSITORY
