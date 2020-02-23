@@ -482,7 +482,7 @@ C<like> matches $got value against the $expected regex.
 
 =head3 can_ok($class, @methods)
 
-Checks to make sure the $module or $object can do these @methods
+Checks to make sure the $class or $object can do these @methods
 (works with functions, too).
 
     Test::Arrow->can_ok($class, @methods);
