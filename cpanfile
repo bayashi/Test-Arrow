@@ -6,6 +6,7 @@ requires 'warnings';
 requires 'Test::Builder::Module';
 requires 'Test::Name::FromLine';
 requires 'Text::MatchedPosition';
+requires 'Scalar::Util';
 
 on 'test' => sub {
     requires 'Test::More', '0.88';
