@@ -22,6 +22,11 @@ sub import {
         require utf8;
         utf8->import;
     }
+
+    if ($] < 5.014000) {
+        require IO::Handle;
+        IO::Handle->import;
+    }
 }
 
 sub new {
