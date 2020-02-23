@@ -498,7 +498,7 @@ Checks to make sure the $class or $object can do these @methods
 
     $arr->got($got_object)->expected($class)->isa_ok;
 
-Checks to see if the given C<$got_object->isa($class)>. Also checks to make sure the object was defined in the first place.
+Checks to see if the given C<$got_object-&gt;isa($class)>. Also checks to make sure the object was defined in the first place.
 
 It works on references, too:
 
