@@ -55,6 +55,10 @@ sub fail {
     $KLASS->builder->ok(0, @_);
 }
 
+sub BAIL_OUT {
+    $KLASS->builder->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
+}
+
 sub name {
     my ($self, $name) = @_;
 
@@ -579,6 +583,11 @@ Actually, you can execute a test even only C<throw> method
 
     $arr->throw(sub { die 'Baz' }, qr/^Ba/);
 
+=head2 BAIL OUT
+
+=head3 BAIL_OUT($why)
+
+Terminates tests.
 
 =head2 UTILITIES
 
