@@ -40,6 +40,8 @@ This is Perl module B<Test::Arrow>. It's Object-Oriented testing library.
     #           matches '(?^:b)'
     #           matched at line: 1, offset: 2
 
+    $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
+
 
 =head1 INSTALLATION
 

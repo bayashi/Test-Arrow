@@ -334,6 +334,54 @@ sub _get_isa_diag_name {
     return($diag, $name);
 }
 
+sub throw_ok {
+    my $self = shift;
+
+    eval { shift->() };
+
+    $KLASS->builder->ok(!!$@, $self->_specific('_name', $_[0]));
+}
+
+sub throw {
+    my $self = shift;
+    my $code = shift;
+
+    die 'The `throw` method expects code ref.' unless ref $code eq 'CODE';
+
+    eval { $code->() };
+
+    if (my $e = $@) {
+        if (defined $_[0]) {
+            $KLASS->builder->like($e, $_[0], $_[1] || 'Thrown correctly');
+            $self->_reset;
+        }
+        else {
+            $self->got($e);
+        }
+    }
+    else {
+        local $Test::Builder::Level = 2;
+        $self->fail('Not thrown');
+    }
+
+    $self;
+}
+
+sub catch {
+    my $self  = shift;
+    my $regex = shift;
+
+    $KLASS->builder->like(
+        $self->_specific('_got', undef),
+        $regex,
+        $_[0] || 'Thrown correctly',
+    );
+
+    $self->_reset;
+
+    $self;
+}
+
 1;
 
 __END__
@@ -375,6 +423,8 @@ Test::Arrow - Object-Oriented testing library
     #                   'abc'
     #           matches '(?^:b)'
     #           matched at line: 1, offset: 2
+
+    $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
 
 =head1 DESCRIPTION
@@ -503,6 +553,31 @@ Checks to see if the given C<$got_object-&gt;isa($class)>. Also checks to make s
 It works on references, too:
 
     $arr->got($array_ref)->expected('ARRAY')->isa_ok;
+
+
+=head2 EXCEPTION TEST
+
+=head3 throw_ok($code_ref)
+
+It makes sure that $code_ref gets an exception.
+
+    $arr->throw_ok(sub { die 'oops' });
+
+=head3 throw($code_ref)
+
+=head3 catch($regex)
+
+The C<throw> method invokes $code_ref, and if it's certenly thrown an exception, then an exception message will be set as $got and the $regex in C<catch> method will be evaluated to $got.
+
+    $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
+
+Above test is equivalent to below
+
+    $arr->throw(sub { die 'Baz' })->expected(qr/^Ba/)->like;
+
+Actually, you can execute a test even only C<throw> method
+
+    $arr->throw(sub { die 'Baz' }, qr/^Ba/);
 
 
 =head2 UTILITIES
