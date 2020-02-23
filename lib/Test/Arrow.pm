@@ -583,6 +583,11 @@ Actually, you can execute a test even only C<throw> method
 
     $arr->throw(sub { die 'Baz' }, qr/^Ba/);
 
+=head2 BAIL OUT
+
+=head3 BAIL_OUT($why)
+
+Terminates tests.
 
 =head2 UTILITIES
 
