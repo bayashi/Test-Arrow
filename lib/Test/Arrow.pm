@@ -366,7 +366,7 @@ sub catch {
     my $self  = shift;
     my $regex = shift;
 
-    _tb->like(
+    my $ret = _tb->like(
         $self->_specific('_got', undef),
         $regex,
         $_[0] || 'Thrown correctly',
@@ -374,7 +374,7 @@ sub catch {
 
     $self->_reset;
 
-    $self;
+    $ret;
 }
 
 1;
