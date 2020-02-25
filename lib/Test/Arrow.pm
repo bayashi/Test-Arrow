@@ -16,17 +16,23 @@ sub import {
     my $pkg  = shift;
     my %args = map { $_ => 1 } @_;
 
-    my $binary = delete $args{binary} or delete $args{binary_mode}
-                    or delete $args{not_utf8} or delete $args{'-utf8'} or delete $args{'-utf'};
-    if (!$binary) {
-        binmode $pkg->builder->$_, ':utf8' for qw(failure_output todo_output output);
-        require utf8;
-        utf8->import;
-    }
+    $pkg->_import_option_binary(\%args);
 
     if ($] < 5.014000) {
         require IO::Handle;
         IO::Handle->import;
+    }
+}
+
+sub _import_option_binary {
+    my ($pkg, $args) = @_;
+
+    my $binary = delete $args->{binary} or delete $args->{binary_mode}
+                    or delete $args->{not_utf8} or delete $args->{'-utf8'} or delete $args->{'-utf'};
+    if (!$binary) {
+        binmode $pkg->builder->$_, ':utf8' for qw(failure_output todo_output output);
+        require utf8;
+        utf8->import;
     }
 }
 
