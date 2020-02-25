@@ -1,6 +1,3 @@
-use strict;
-use warnings;
-
 use Test::Arrow;
 
 my $got = my $expected = "same";
