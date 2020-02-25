@@ -5,7 +5,7 @@ use Test::Builder::Module;
 use Test::Name::FromLine;
 use Text::MatchedPosition;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 our @ISA = qw/Test::Builder::Module/;
 
@@ -679,7 +679,7 @@ B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
 =begin html
 
-<a href="https://github.com/bayashi/Test-Arrow/blob/master/README.pod"><img src="https://img.shields.io/badge/Version-0.08-green?style=flat"></a> <a href="https://github.com/bayashi/Test-Arrow/blob/master/LICENSE"><img src="https://img.shields.io/badge/LICENSE-Artistic%202.0-GREEN.png"></a> <a href="https://github.com/bayashi/Test-Arrow/actions"><img src="https://github.com/bayashi/Test-Arrow/workflows/master/badge.svg?_t=1582511878"/></a> <a href="https://coveralls.io/r/bayashi/Test-Arrow"><img src="https://coveralls.io/repos/bayashi/Test-Arrow/badge.png?_t=1582511878&branch=master"/></a>
+<a href="https://github.com/bayashi/Test-Arrow/blob/master/README.pod"><img src="https://img.shields.io/badge/Version-0.09-green?style=flat"></a> <a href="https://github.com/bayashi/Test-Arrow/blob/master/LICENSE"><img src="https://img.shields.io/badge/LICENSE-Artistic%202.0-GREEN.png"></a> <a href="https://github.com/bayashi/Test-Arrow/actions"><img src="https://github.com/bayashi/Test-Arrow/workflows/master/badge.svg?_t=1582638671"/></a> <a href="https://coveralls.io/r/bayashi/Test-Arrow"><img src="https://coveralls.io/repos/bayashi/Test-Arrow/badge.png?_t=1582638671&branch=master"/></a>
 
 =end html
 
