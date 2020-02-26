@@ -361,6 +361,10 @@ sub throw_ok {
     eval { shift->() };
 
     _tb->ok(!!$@, $self->_specific('_name', $_[0]));
+
+    $self->_reset;
+
+    $self;
 }
 
 sub throw {
@@ -417,6 +421,10 @@ sub warnings_ok {
     }
 
     _tb->ok($warn > 0, $self->_specific('_name', $name));
+
+    $self->_reset;
+
+    $self;
 }
 
 sub warnings {
