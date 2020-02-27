@@ -97,8 +97,6 @@ sub expected {
     $self;
 }
 
-sub expect { shift->expected(@_) }
-
 sub got {
     my ($self, $value) = @_;
 
@@ -462,9 +460,14 @@ sub warnings {
 
 {
     no warnings 'once';
-    *warn_ok = *warnings_ok;
+    *expect = *expected;
+
+    *warn_ok    = *warnings_ok;
     *warning_ok = *warnings_ok;
+
     *warning = *warnings;
+
+    *done = *done_testing;
 }
 
 1;
@@ -744,6 +747,9 @@ Declare of done testing.
 
 B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
+=head3 done
+
+Alias of done_testing
 
 =head2 CONSTANTS
 
