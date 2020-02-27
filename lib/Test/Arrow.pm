@@ -512,8 +512,8 @@ Test::Arrow - Object-Oriented testing library
     #           matches '(?^:b)'
     #           matched at line: 1, offset: 2
 
-    $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
+    $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
 
 =head1 DESCRIPTION
@@ -591,9 +591,9 @@ The test name is taken from the first line of each test.
 
 =head2 TEST EXECUTERS
 
-=head3 pass
+=head3 pass($test_name)
 
-=head3 fail
+=head3 fail($test_name)
 
 Just pass or fail
 
@@ -647,7 +647,7 @@ Checks to make sure the $class or $object can do these @methods
 
     $arr->got($got_object)->expected($class)->isa_ok;
 
-Checks to see if the given C<$got_object-&gt;isa($class)>. Also checks to make sure the object was defined in the first place.
+Checks to see if the given C<$got_object-E<gt>isa($class)>. Also checks to make sure the object was defined in the first place.
 
 It works on references, too:
 
@@ -749,17 +749,13 @@ B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
 =head3 done
 
-Alias of done_testing
+Alias of C<done_testing>
 
 =head2 CONSTANTS
 
-=head3 PASS
+=head3 PASS = 1
 
-1
-
-=head3 FAIL
-
-0
+=head3 FAIL = 0
 
 
 =head1 REPOSITORY
@@ -786,7 +782,7 @@ L<Test::More>
 
 L<Test::Kantan> - A behavior-driven development framework
 
-L<Test::Builder::Module>
+L<Test::Builder>
 
 L<Test::Name::FromLine>
 
