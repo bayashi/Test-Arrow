@@ -747,6 +747,9 @@ Declare of done testing.
 
 B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
+=head3 done
+
+Alias of done_testing
 
 =head2 CONSTANTS
 
