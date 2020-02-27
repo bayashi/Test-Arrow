@@ -361,6 +361,10 @@ sub throw_ok {
     eval { shift->() };
 
     _tb->ok(!!$@, $self->_specific('_name', $_[0]));
+
+    $self->_reset;
+
+    $self;
 }
 
 sub throw {
@@ -395,12 +399,72 @@ sub catch {
     my $ret = _tb->like(
         $self->_specific('_got', undef),
         $regex,
-        $_[0] || 'Thrown correctly',
+        $self->_specific('_name', $_[0]),
     );
 
     $self->_reset;
 
     $ret;
+}
+
+sub warnings_ok {
+    my ($self, $code, $name) = @_;
+
+    my $warn = 0;
+    eval {
+        local $SIG{__WARN__} = sub { $warn++ };
+        $code->();
+    };
+    if (my $e = $@) {
+        _tb->ok(FAIL);
+        $self->diag("An exception happened: $e");
+    }
+
+    _tb->ok($warn > 0, $self->_specific('_name', $name));
+
+    $self->_reset;
+
+    $self;
+}
+
+sub warnings {
+    my ($self, $code, $regex, $name) = @_;
+
+    die 'The `warn` method expects code ref.' unless ref $code eq 'CODE';
+
+    my @warns;
+    eval {
+        local $SIG{__WARN__} = sub { push @warns, shift };
+        $code->();
+    };
+    if (my $e = $@) {
+        _tb->ok(FAIL);
+        $self->diag("An exception happened: $e");
+    }
+
+    if (scalar @warns > 0) {
+        my $warn = join "\t", @warns;
+        if (defined $regex) {
+            _tb->like($warn, $regex, $self->_specific('_name', $name));
+            $self->_reset;
+        }
+        else {
+            $self->got($warn);
+        }
+    }
+    else {
+        _tb->ok(FAIL);
+        $self->diag(q|Failed, because there is no warnings.|);
+    }
+
+    $self;
+}
+
+{
+    no warnings 'once';
+    *warn_ok = *warnings_ok;
+    *warning_ok = *warnings_ok;
+    *warning = *warnings;
 }
 
 1;
@@ -446,6 +510,7 @@ Test::Arrow - Object-Oriented testing library
     #           matched at line: 1, offset: 2
 
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
+    $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
 
 
 =head1 DESCRIPTION
@@ -609,6 +674,22 @@ Above test is equivalent to below
 Actually, you can execute a test even only C<throw> method
 
     $arr->throw(sub { die 'Baz' }, qr/^Ba/);
+
+=head3 warnings_ok($code_ref)
+
+It makes sure that $code_ref gets warnings.
+
+    $arr->warnings_ok(sub { warn 'heads up' });
+
+There are aliases of C<warnings_ok> method: C<warning_ok>, C<warn_ok>.
+
+=head3 warnings($code_ref)
+
+C<warnings> method is called like below:
+
+    $arr->warnings(sub { warn 'heads up' })->catch(qr/^heads/);
+
+C<warning> is an alias of C<warnings>.
 
 =head2 BAIL OUT
 
