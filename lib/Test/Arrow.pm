@@ -501,6 +501,10 @@ Test::Arrow - Object-Oriented testing library
         ->got(2 * 3)
         ->is_num;
 
+    $arr->expected(qr/^ab/)
+        ->got('abc')
+        ->like;
+
     # `unlike` shows where a place could have matched if it's failed
     $arr->name('Unlike Fail example')
         ->expected(qr/b/)
