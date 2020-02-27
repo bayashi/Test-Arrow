@@ -28,6 +28,6 @@
 ^\.git/
 \.sw[po]$
 ^MYMETA\.*$
-^Test-Arrow-*^MYMETA\.yml$
-^MYMETA\.json$
+^Test-Arrow-*
 ^MYMETA\.yml$
+^MYMETA\.json$
