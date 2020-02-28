@@ -48,6 +48,7 @@ $arr->name('expect alias')
     ->is;
 
 $arr->name('expalin test')->expected($expected)->got($got)->explain->is;
+$arr->name('x test')->expected($expected)->got($got)->x({ foo => 123 })->is;
 
 # isnt
 $arr->isnt($got, $isnt_expected);

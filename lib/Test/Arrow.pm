@@ -221,6 +221,20 @@ sub explain {
     $self;
 }
 
+sub x {
+    my $self = shift;
+
+    my $hash = {
+        got      => $self->{_got},
+        expected => $self->{_expected},
+        name     => $self->{_name},
+    };
+
+    $self->diag(_tb->explain(@_, $hash));
+
+    $self;
+}
+
 sub done_testing {
     my $self = shift;
 
@@ -743,6 +757,20 @@ If you call C<explain> method with arg, then C<explain> method just dumps it.
     #   'baz' => 123
     # }
     ok 1 - foo
+
+=head3 x($ref)
+
+If you call C<x> method, then the current values (name, expected and got) are dumped with arg.
+
+    $arr->name('x test')->expected('BAR')->got(uc 'bar')->x({ foo => 123 })->is;
+    # {
+    #   'foo' => 123
+    # }
+    # {
+    #   'expected' => 'BAR',
+    #   'got' => 'BAR',
+    #   'name' => 'x test'
+    # }
 
 =head3 done_testing
 
