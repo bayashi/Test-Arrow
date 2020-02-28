@@ -487,7 +487,6 @@ Test::Arrow - Object-Oriented testing library
 
     my $arr = Test::Arrow->new;
 
-    $arr->ok(1);
     $arr->got(1)->ok;
 
     $arr->expect(uc 'foo')->to_be('FOO');
@@ -504,17 +503,6 @@ Test::Arrow - Object-Oriented testing library
     $arr->expected(qr/^ab/)
         ->got('abc')
         ->like;
-
-    # `unlike` shows where a place could have matched if it's failed
-    $arr->name('Unlike Fail example')
-        ->expected(qr/b/)
-        ->got('abc')
-        ->unlike;
-    #   Failed test 'Unlike Fail example'
-    #   at t/unlike.t line 12.
-    #                   'abc'
-    #           matches '(?^:b)'
-    #           matched at line: 1, offset: 2
 
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
@@ -615,7 +603,7 @@ More easy,
 
 Similar to C<is> and C<isnt> compare values with C<eq> and C<ne>.
 
-    $arr->expect('FOO')->got(uc 'foo')->is;
+    $arr->expected('FOO')->got(uc 'foo')->is;
 
 =head3 is_num
 
@@ -623,7 +611,7 @@ Similar to C<is> and C<isnt> compare values with C<eq> and C<ne>.
 
 Similar to C<is_num> and C<isnt_num> compare values with C<==> and C<!=>.
 
-    $arr->expect(6)->got( 2 * 3 )->is_num;
+    $arr->expected(6)->got( 2 * 3 )->is_num;
 
 =head3 to_be($got)
 
@@ -637,7 +625,21 @@ The $got will be compare with expected value.
 
 C<like> matches $got value against the $expected regex.
 
-    $arr->expect(qr/b/)->got('abc')->like;
+    $arr->expected(qr/b/)->got('abc')->like;
+
+Works exactly as C<like>, only it checks if $got does not match the expected pattern.
+
+C<unlike> shows where a place could have matched if it's failed like below.
+
+    $arr->name('Unlike Fail example')
+        ->expected(qr/b/)
+        ->got('abc')
+        ->unlike;
+    #   Failed test 'Unlike Fail example'
+    #   at t/unlike.t line 12.
+    #                   'abc'
+    #           matches '(?^:b)'
+    #           matched at line: 1, offset: 2
 
 =head3 can_ok($class, @methods)
 

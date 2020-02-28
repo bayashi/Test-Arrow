@@ -15,7 +15,6 @@ This is Perl module B<Test::Arrow>. It's Object-Oriented testing library.
 
     my $arr = Test::Arrow->new;
 
-    $arr->ok(1);
     $arr->got(1)->ok;
 
     $arr->expect(uc 'foo')->to_be('FOO');
@@ -32,17 +31,6 @@ This is Perl module B<Test::Arrow>. It's Object-Oriented testing library.
     $arr->expected(qr/^ab/)
         ->got('abc')
         ->like;
-
-    # `unlike` shows where a place could have matched if it's failed
-    $arr->name('Unlike Fail example')
-        ->expected(qr/b/)
-        ->got('abc')
-        ->unlike;
-    #   Failed test 'Unlike Fail example'
-    #   at t/unlike.t line 12.
-    #                   'abc'
-    #           matches '(?^:b)'
-    #           matched at line: 1, offset: 2
 
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
