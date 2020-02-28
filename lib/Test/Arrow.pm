@@ -57,7 +57,12 @@ sub _import_option_binary {
 }
 
 sub new {
-    bless {}, shift;
+    my $class = shift;
+    my %args  = @_;
+
+    bless {
+        no_x => delete $args{'no_x'},
+    }, $class;
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -217,6 +222,22 @@ sub explain {
     else {
         $self->diag(_tb->explain(@_));
     }
+
+    $self;
+}
+
+sub x {
+    my $self = shift;
+
+    return $self if $self->{no_x};
+
+    my $hash = {
+        got      => $self->{_got},
+        expected => $self->{_expected},
+        name     => $self->{_name},
+    };
+
+    $self->diag(_tb->explain(@_, $hash));
 
     $self;
 }
@@ -544,6 +565,14 @@ The constructor.
 
     my $arr = Test::Arrow->new;
 
+=over
+
+=item no_x
+
+If you set C<no_x> option the ture value, then the C<x> method doesn't show any message.
+
+=back
+
 =head2 SETTERS
 
 =head3 expected($expected)
@@ -743,6 +772,20 @@ If you call C<explain> method with arg, then C<explain> method just dumps it.
     #   'baz' => 123
     # }
     ok 1 - foo
+
+=head3 x($ref)
+
+If you call C<x> method, then the current values (name, expected and got) are dumped with arg.
+
+    $arr->name('x test')->expected('BAR')->got(uc 'bar')->x({ foo => 123 })->is;
+    # {
+    #   'foo' => 123
+    # }
+    # {
+    #   'expected' => 'BAR',
+    #   'got' => 'BAR',
+    #   'name' => 'x test'
+    # }
 
 =head3 done_testing
 
