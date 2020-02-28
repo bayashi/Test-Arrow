@@ -5,7 +5,7 @@ my $isnt_expected = 'wrong';
 
 Test::Arrow->pass('PASS');
 
-my $arr = Test::Arrow->new;
+my $arr = Test::Arrow->new(no_x => 1);
 
 $arr->pass('PASS2');
 

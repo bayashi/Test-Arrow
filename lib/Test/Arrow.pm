@@ -57,7 +57,12 @@ sub _import_option_binary {
 }
 
 sub new {
-    bless {}, shift;
+    my $class = shift;
+    my %args  = @_;
+
+    bless {
+        no_x => delete $args{'no_x'},
+    }, $class;
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -223,6 +228,8 @@ sub explain {
 
 sub x {
     my $self = shift;
+
+    return $self if $self->{no_x};
 
     my $hash = {
         got      => $self->{_got},
@@ -557,6 +564,14 @@ By default, C<Test::Arrow> sets utf8 pragma globally to avoid warnings such as "
 The constructor.
 
     my $arr = Test::Arrow->new;
+
+=over
+
+=item no_x
+
+If you set C<no_x> option the ture value, then the C<x> method doesn't show any message.
+
+=back
 
 =head2 SETTERS
 
