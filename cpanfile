@@ -23,4 +23,5 @@ on 'develop' => sub {
     requires 'Test::Perl::Metrics::Lite';
     requires 'Test::Vars';
     requires 'Test::File::Find::Rule';
+    requires 'File::Find::Rule::BOM';
 };
