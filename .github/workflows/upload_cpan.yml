@@ -36,6 +36,5 @@ jobs:
             echo "password" $PAUSE_PASSWORD >> $HOME/.pause
             echo "mailto" $PAUSE_MAILTO >> $HOME/.pause
             chmod 0600 $HOME/.pause
-            ls -la
-            git checkout .
+            ls -la $HOME
             cpan-upload -c $HOME/.pause -u $PAUSE_USER -p "" $HOME/Test-Arrow-`perl -Ilib -MTest::Arrow -e 'print $Test::Arrow::VERSION'`.tar.gz
