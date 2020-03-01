@@ -37,4 +37,5 @@ jobs:
             echo "mailto" $PAUSE_MAILTO >> $HOME/.pause
             chmod 0600 $HOME/.pause
             ls -la $HOME
-            cpan-upload -c $HOME/.pause -u $PAUSE_USER -p "" $HOME/Test-Arrow-`perl -Ilib -MTest::Arrow -e 'print $Test::Arrow::VERSION'`.tar.gz
+            ls -la
+            cpan-upload -c $HOME/.pause -u $PAUSE_USER -p "" ./Test-Arrow-`perl -Ilib -MTest::Arrow -e 'print $Test::Arrow::VERSION'`.tar.gz
