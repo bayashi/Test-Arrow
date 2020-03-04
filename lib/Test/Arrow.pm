@@ -20,6 +20,10 @@ sub import {
     $pkg->_import_option_no_warnings(\%args);
     $pkg->_import_option_binary(\%args);
 
+    if (scalar(keys %args) > 0) {
+        die "Wrong option: " . join(", ", keys %args);
+    }
+
     if ($] < 5.014000) {
         require IO::Handle;
         IO::Handle->import;
