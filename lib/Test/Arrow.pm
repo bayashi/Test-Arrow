@@ -92,6 +92,37 @@ sub plan {
     return _tb->plan(@_);
 }
 
+sub _carp {
+    my($file, $line) = ( caller(1) )[ 1, 2 ];
+    return warn @_, " at $file line $line\n";
+}
+
+sub skip {
+    my($self, $why, $how_many) = @_;
+
+    # If the plan is set, and is static, then skip needs a count. If the plan
+    # is 'no_plan' we are fine. As well if plan is undefined then we are
+    # waiting for done_testing.
+    unless (defined $how_many) {
+        my $plan = _tb->has_plan;
+        _carp "skip() needs to know \$how_many tests are in the block"
+            if $plan && $plan =~ m/^\d+$/;
+        $how_many = 1;
+    }
+
+    if(defined $how_many and $how_many =~ /\D/) {
+        _carp "skip() was passed a non-numeric number of tests.  Did you get the arguments backwards?";
+        $how_many = 1;
+    }
+
+    for(1 .. $how_many) {
+        _tb->skip($why);
+    }
+
+    no warnings 'exiting';
+    last SKIP;
+}
+
 sub BAIL_OUT {
     _tb->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
 }
@@ -775,6 +806,20 @@ C<warning> is an alias of C<warnings>.
 =head3 BAIL_OUT($why)
 
 Terminates tests.
+
+=head2 CONDITIONAL TESTS
+
+=head3 skip
+
+In order to skip tests like below.
+
+    SKIP: {
+        $arr->skip($why, $how_many) if $condition;
+
+        ...normal testing code goes here...
+    }
+
+Test::Arrow doesn't have C<todo_skip>.
 
 =head2 UTILITIES
 
