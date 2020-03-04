@@ -60,9 +60,15 @@ sub new {
     my $class = shift;
     my %args  = @_;
 
-    bless {
+    my $self = bless {
         no_x => delete $args{'no_x'},
     }, $class;
+
+    if ($args{plan}) {
+        $self->plan(%{$args{plan}});
+    }
+
+    $self;
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -79,6 +85,12 @@ sub _reset {
 
 sub pass { shift; _tb->ok(PASS, @_) }
 sub fail { shift; _tb->ok(FAIL, @_) }
+
+sub plan {
+    my $self = shift;
+
+    return _tb->plan(@_);
+}
 
 sub BAIL_OUT {
     _tb->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
@@ -570,6 +582,35 @@ The constructor.
 =item no_x
 
 If you set C<no_x> option the ture value, then the C<x> method doesn't show any message.
+
+=item plan
+
+If you set C<plan> option with hash, then the C<plan> method, it's same as Test::More's one, it will be called in constructor.
+
+    my $arr = Test::Arrow->new(
+        plan => {
+            tests => 2,
+        }
+    );
+
+    $arr->ok(1);
+    $arr->is(1, 1);
+
+If you want to skip all tests,
+
+    my $arr = Test::Arrow->new(
+        plan => {
+            skip_all => 'Reason',
+        }
+    );
+
+Test::More has the import option for test plan, but Test::Arrow doesn't. Below code doesn't work as your intent.
+
+    use Test::Arrow plan => 12;
+
+It should be in constructor option or should be called as straightforward method/function.
+
+    $arr->plan(skip_all => 'Reason');
 
 =back
 
