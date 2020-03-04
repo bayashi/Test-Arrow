@@ -60,9 +60,15 @@ sub new {
     my $class = shift;
     my %args  = @_;
 
-    bless {
+    my $self = bless {
         no_x => delete $args{'no_x'},
     }, $class;
+
+    if ($args{plan}) {
+        $self->plan(%{$args{plan}});
+    }
+
+    $self;
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -79,6 +85,43 @@ sub _reset {
 
 sub pass { shift; _tb->ok(PASS, @_) }
 sub fail { shift; _tb->ok(FAIL, @_) }
+
+sub plan {
+    my $self = shift;
+
+    return _tb->plan(@_);
+}
+
+sub _carp {
+    my($file, $line) = ( caller(1) )[ 1, 2 ];
+    return warn @_, " at $file line $line\n";
+}
+
+sub skip {
+    my($self, $why, $how_many) = @_;
+
+    # If the plan is set, and is static, then skip needs a count. If the plan
+    # is 'no_plan' we are fine. As well if plan is undefined then we are
+    # waiting for done_testing.
+    unless (defined $how_many) {
+        my $plan = _tb->has_plan;
+        _carp "skip() needs to know \$how_many tests are in the block"
+            if $plan && $plan =~ m/^\d+$/;
+        $how_many = 1;
+    }
+
+    if(defined $how_many and $how_many =~ /\D/) {
+        _carp "skip() was passed a non-numeric number of tests.  Did you get the arguments backwards?";
+        $how_many = 1;
+    }
+
+    for(1 .. $how_many) {
+        _tb->skip($why);
+    }
+
+    no warnings 'exiting';
+    last SKIP;
+}
 
 sub BAIL_OUT {
     _tb->BAIL_OUT(scalar @_ == 1 ? $_[0] : $_[1]);
@@ -571,6 +614,35 @@ The constructor.
 
 If you set C<no_x> option the ture value, then the C<x> method doesn't show any message.
 
+=item plan
+
+If you set C<plan> option with hash, then the C<plan> method, it's same as Test::More's one, it will be called in constructor.
+
+    my $arr = Test::Arrow->new(
+        plan => {
+            tests => 2,
+        }
+    );
+
+    $arr->ok(1);
+    $arr->is(1, 1);
+
+If you want to skip all tests,
+
+    my $arr = Test::Arrow->new(
+        plan => {
+            skip_all => 'Reason',
+        }
+    );
+
+Test::More has the import option for test plan, but Test::Arrow doesn't. Below code doesn't work as your intent.
+
+    use Test::Arrow plan => 12;
+
+It should be in constructor option or should be called as straightforward method/function.
+
+    $arr->plan(skip_all => 'Reason');
+
 =back
 
 =head2 SETTERS
@@ -734,6 +806,20 @@ C<warning> is an alias of C<warnings>.
 =head3 BAIL_OUT($why)
 
 Terminates tests.
+
+=head2 CONDITIONAL TESTS
+
+=head3 skip
+
+In order to skip tests like below.
+
+    SKIP: {
+        $arr->skip($why, $how_many) if $condition;
+
+        ...normal testing code goes here...
+    }
+
+Test::Arrow doesn't have C<todo_skip>.
 
 =head2 UTILITIES
 
