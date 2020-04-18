@@ -558,16 +558,14 @@ sub is_deeply {
     else {
         # both references
         local @Data_Stack = ();
-        if( $self->_deep_check($got, $expected) ) {
-            $ok = _tb->ok(PASS, $test_name);
-        }
-        else {
-            $ok = _tb->ok(FAIL, $test_name);
-            _tb->diag( $self->_format_stack(@Data_Stack) );
-        }
+        $ok = $self->_deep_check($got, $expected);
+        _tb->diag( $self->_format_stack(@Data_Stack) ) unless $ok;
+        _tb->ok($ok, $test_name);
     }
 
-    return $ok;
+    $self->_reset;
+
+    $self;
 }
 
 sub __same_ref { !(!ref $_[0] xor !ref $_[1]) }
