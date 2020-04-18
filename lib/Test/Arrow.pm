@@ -552,17 +552,17 @@ sub is_deeply {
     }
     elsif (!ref $got xor !ref $expected) {
         # one's a reference, one isn't
-        $ok = _tb->ok(0, $test_name);
+        $ok = _tb->ok(FAIL, $test_name);
         _tb->diag( $self->_format_stack({ vals => [$got, $expected] }) );
     }
     else {
         # both references
         local @Data_Stack = ();
         if( $self->_deep_check($got, $expected) ) {
-            $ok = _tb->ok(1, $test_name);
+            $ok = _tb->ok(PASS, $test_name);
         }
         else {
-            $ok = _tb->ok(0, $test_name);
+            $ok = _tb->ok(FAIL, $test_name);
             _tb->diag( $self->_format_stack(@Data_Stack) );
         }
     }
@@ -573,7 +573,7 @@ sub is_deeply {
 sub _deep_check {
     my($self, $e1, $e2) = @_;
 
-    my $ok = 0;
+    my $ok = FAIL;
 
     # Effectively turn %Refs_Seen into a stack.  This avoids picking up
     # the same referenced used twice (such as [\$a, \$a]) to be considered
@@ -588,21 +588,21 @@ sub _deep_check {
         my $not_ref  =  (!ref $e1 and !ref $e2);
 
         if (defined $e1 xor defined $e2) {
-            $ok = 0;
+            $ok = FAIL;
         }
         elsif (!defined $e1 and !defined $e2) {
             # Shortcut if they're both undefined.
-            $ok = 1;
+            $ok = PASS;
         }
         elsif ($self->_dne($e1) xor $self->_dne($e2)) {
-            $ok = 0;
+            $ok = FAIL;
         }
         elsif ($same_ref and ($e1 eq $e2)) {
-            $ok = 1;
+            $ok = PASS;
         }
         elsif ($not_ref) {
             push @Data_Stack, { type => '', vals => [$e1, $e2] };
-            $ok = 0;
+            $ok = FAIL;
         }
         else {
             if ($Refs_Seen{$e1}) {
@@ -617,7 +617,7 @@ sub _deep_check {
 
             if ($type eq 'DIFFERENT') {
                 push @Data_Stack, { type => $type, vals => [$e1, $e2] };
-                $ok = 0;
+                $ok = FAIL;
             }
             elsif ($type eq 'ARRAY') {
                 $ok = $self->_eq_array($e1, $e2);
@@ -637,7 +637,7 @@ sub _deep_check {
             }
             elsif ($type) {
                 push @Data_Stack, { type => $type, vals => [$e1, $e2] };
-                $ok = 0;
+                $ok = FAIL;
             }
             else {
                 die <<_WHOA_;
@@ -656,12 +656,12 @@ sub _eq_array {
 
     if ( grep $self->_type($_) ne 'ARRAY', $a1, $a2 ) {
         warn "eq_array passed a non-array ref";
-        return 0;
+        return FAIL;
     }
 
-    return 1 if $a1 eq $a2;
+    return PASS if $a1 eq $a2;
 
-    my $ok = 1;
+    my $ok = PASS;
     my $max = $#$a1 > $#$a2 ? $#$a1 : $#$a2;
 
     for (0 .. $max) {
@@ -685,12 +685,12 @@ sub _eq_hash {
 
     if ( grep $self->_type($_) ne 'HASH', $a1, $a2 ) {
         warn "eq_hash passed a non-hash ref";
-        return 0;
+        return FAIL;
     }
 
-    return 1 if $a1 eq $a2;
+    return PASS if $a1 eq $a2;
 
-    my $ok = 1;
+    my $ok = PASS;
     my $bigger = keys %$a1 > keys %$a2 ? $a1 : $a2;
 
     for my $k ( keys %$bigger ) {
@@ -715,10 +715,10 @@ sub _equal_nonrefs {
     return if ref $e1 or ref $e2;
 
     if (defined $e1) {
-        return 1 if defined $e2 and $e1 eq $e2;
+        return PASS if defined $e2 and $e1 eq $e2;
     }
     else {
-        return 1 if !defined $e2;
+        return PASS if !defined $e2;
     }
 
     return;
