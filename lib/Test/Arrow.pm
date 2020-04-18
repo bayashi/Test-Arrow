@@ -144,6 +144,12 @@ sub name {
 sub expected {
     my ($self, $value) = @_;
 
+    my $arg_count = scalar(@_) - 1;
+
+    if ($arg_count > 1) {
+        die "'expected' method expects just only one arg. You passed $arg_count args.";
+    }
+
     $self->{_expected} = $value;
 
     $self;
@@ -151,6 +157,12 @@ sub expected {
 
 sub got {
     my ($self, $value) = @_;
+
+    my $arg_count = scalar(@_) - 1;
+
+    if ($arg_count > 1) {
+        die "'got' method expects just only one arg. You passed $arg_count args.";
+    }
 
     $self->{_got} = $value;
 
@@ -852,8 +864,6 @@ Test::Arrow - Object-Oriented testing library
 
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
-
-    Test::Arrow->done_testing;
 
 
 =head1 DESCRIPTION
