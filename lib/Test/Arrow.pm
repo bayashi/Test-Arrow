@@ -853,6 +853,8 @@ Test::Arrow - Object-Oriented testing library
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
+    Test::Arrow->done_testing;
+
 
 =head1 DESCRIPTION
 
