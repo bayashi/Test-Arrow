@@ -97,12 +97,12 @@ sub plan {
 }
 
 sub _carp {
-    my($file, $line) = ( caller(1) )[ 1, 2 ];
+    my ($file, $line) = ( caller(1) )[ 1, 2 ];
     return warn @_, " at $file line $line\n";
 }
 
 sub skip {
-    my($self, $why, $how_many) = @_;
+    my ($self, $why, $how_many) = @_;
 
     # If the plan is set, and is static, then skip needs a count. If the plan
     # is 'no_plan' we are fine. As well if plan is undefined then we are
@@ -299,7 +299,7 @@ sub done_testing {
 
 # Mostly copied from Test::More::can_ok
 sub can_ok {
-    my($self, $proto, @methods) = @_;
+    my ($self, $proto, @methods) = @_;
 
     my $class = ref $proto || $proto;
 
@@ -527,7 +527,7 @@ sub warnings {
 }
 
 # The most code around is_depply is copied from Test::More::is_deeply
-our(@Data_Stack, %Refs_Seen);
+our (@Data_Stack, %Refs_Seen);
 
 my $DNE = bless [], 'Does::Not::Exist';
 
@@ -571,7 +571,7 @@ sub is_deeply {
 }
 
 sub _deep_check {
-    my($self, $e1, $e2) = @_;
+    my ($self, $e1, $e2) = @_;
 
     my $ok = FAIL;
 
@@ -652,7 +652,7 @@ _WHOA_
 }
 
 sub _eq_array {
-    my($self, $a1, $a2) = @_;
+    my ($self, $a1, $a2) = @_;
 
     if ( grep $self->_type($_) ne 'ARRAY', $a1, $a2 ) {
         warn "eq_array passed a non-array ref";
@@ -681,7 +681,7 @@ sub _eq_array {
 }
 
 sub _eq_hash {
-    my($self, $a1, $a2) = @_;
+    my ($self, $a1, $a2) = @_;
 
     if ( grep $self->_type($_) ne 'HASH', $a1, $a2 ) {
         warn "eq_hash passed a non-hash ref";
@@ -710,7 +710,7 @@ sub _eq_hash {
 }
 
 sub _equal_nonrefs {
-    my($self, $e1, $e2) = @_;
+    my ($self, $e1, $e2) = @_;
 
     return if ref $e1 or ref $e2;
 
