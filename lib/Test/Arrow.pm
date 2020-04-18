@@ -526,6 +526,263 @@ sub warnings {
     $self;
 }
 
+# The most code around is_depply is copied from Test::More::is_deeply
+our(@Data_Stack, %Refs_Seen);
+
+my $DNE = bless [], 'Does::Not::Exist';
+
+sub _dne {
+    return ref $_[1] eq ref $DNE;
+}
+
+sub is_deeply {
+    my $self = shift;
+
+    my $got = $self->_specific('_got', $_[0]);
+    my $expected = $self->_specific('_expected', $_[1]);
+    my $test_name = $self->_specific('_name', $_[2]);
+
+    _tb->_unoverload_str(\$expected, \$got);
+
+    my $ok;
+
+    if (!ref $got and !ref $expected) {
+        # neither is a reference
+        $ok = _tb->is_eq($got, $expected, $test_name);
+    }
+    elsif (!ref $got xor !ref $expected) {
+        # one's a reference, one isn't
+        $ok = _tb->ok(0, $test_name);
+        _tb->diag( $self->_format_stack({ vals => [$got, $expected] }) );
+    }
+    else {
+        # both references
+        local @Data_Stack = ();
+        if( $self->_deep_check($got, $expected) ) {
+            $ok = _tb->ok(1, $test_name);
+        }
+        else {
+            $ok = _tb->ok(0, $test_name);
+            _tb->diag( $self->_format_stack(@Data_Stack) );
+        }
+    }
+
+    return $ok;
+}
+
+sub _deep_check {
+    my($self, $e1, $e2) = @_;
+
+    my $ok = 0;
+
+    # Effectively turn %Refs_Seen into a stack.  This avoids picking up
+    # the same referenced used twice (such as [\$a, \$a]) to be considered
+    # circular.
+    local %Refs_Seen = %Refs_Seen;
+
+    {
+        _tb->_unoverload_str(\$e1, \$e2);
+
+        # Either they're both references or both not.
+        my $same_ref = !(!ref $e1 xor !ref $e2);
+        my $not_ref  =  (!ref $e1 and !ref $e2);
+
+        if (defined $e1 xor defined $e2) {
+            $ok = 0;
+        }
+        elsif (!defined $e1 and !defined $e2) {
+            # Shortcut if they're both undefined.
+            $ok = 1;
+        }
+        elsif ($self->_dne($e1) xor $self->_dne($e2)) {
+            $ok = 0;
+        }
+        elsif ($same_ref and ($e1 eq $e2)) {
+            $ok = 1;
+        }
+        elsif ($not_ref) {
+            push @Data_Stack, { type => '', vals => [$e1, $e2] };
+            $ok = 0;
+        }
+        else {
+            if ($Refs_Seen{$e1}) {
+                return $Refs_Seen{$e1} eq $e2;
+            }
+            else {
+                $Refs_Seen{$e1} = "$e2";
+            }
+
+            my $type = $self->_type($e1);
+            $type = 'DIFFERENT' unless $self->_type($e2) eq $type;
+
+            if ($type eq 'DIFFERENT') {
+                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
+                $ok = 0;
+            }
+            elsif ($type eq 'ARRAY') {
+                $ok = $self->_eq_array($e1, $e2);
+            }
+            elsif ($type eq 'HASH') {
+                $ok = $self->_eq_hash($e1, $e2);
+            }
+            elsif ($type eq 'REF') {
+                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
+                $ok = $self->_deep_check($$e1, $$e2);
+                pop @Data_Stack if $ok;
+            }
+            elsif ($type eq 'SCALAR') {
+                push @Data_Stack, { type => 'REF', vals => [$e1, $e2] };
+                $ok = $self->_deep_check($$e1, $$e2);
+                pop @Data_Stack if $ok;
+            }
+            elsif ($type) {
+                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
+                $ok = 0;
+            }
+            else {
+                die <<_WHOA_;
+WHOA!  No type in _deep_check
+This should never happen!  Please contact the author immediately!
+_WHOA_
+            }
+        }
+    }
+
+    return $ok;
+}
+
+sub _eq_array {
+    my($self, $a1, $a2) = @_;
+
+    if ( grep $self->_type($_) ne 'ARRAY', $a1, $a2 ) {
+        warn "eq_array passed a non-array ref";
+        return 0;
+    }
+
+    return 1 if $a1 eq $a2;
+
+    my $ok = 1;
+    my $max = $#$a1 > $#$a2 ? $#$a1 : $#$a2;
+
+    for (0 .. $max) {
+        my $e1 = $_ > $#$a1 ? $DNE : $a1->[$_];
+        my $e2 = $_ > $#$a2 ? $DNE : $a2->[$_];
+
+        next if $self->_equal_nonrefs($e1, $e2);
+
+        push @Data_Stack, { type => 'ARRAY', idx => $_, vals => [$e1, $e2] };
+        $ok = $self->_deep_check($e1, $e2);
+        pop @Data_Stack if $ok;
+
+        last unless $ok;
+    }
+
+    return $ok;
+}
+
+sub _eq_hash {
+    my($self, $a1, $a2) = @_;
+
+    if ( grep $self->_type($_) ne 'HASH', $a1, $a2 ) {
+        warn "eq_hash passed a non-hash ref";
+        return 0;
+    }
+
+    return 1 if $a1 eq $a2;
+
+    my $ok = 1;
+    my $bigger = keys %$a1 > keys %$a2 ? $a1 : $a2;
+
+    for my $k ( keys %$bigger ) {
+        my $e1 = exists $a1->{$k} ? $a1->{$k} : $DNE;
+        my $e2 = exists $a2->{$k} ? $a2->{$k} : $DNE;
+
+        next if $self->_equal_nonrefs($e1, $e2);
+
+        push @Data_Stack, { type => 'HASH', idx => $k, vals => [$e1, $e2] };
+        $ok = $self->_deep_check($e1, $e2);
+        pop @Data_Stack if $ok;
+
+        last unless $ok;
+    }
+
+    return $ok;
+}
+
+sub _equal_nonrefs {
+    my($self, $e1, $e2) = @_;
+
+    return if ref $e1 or ref $e2;
+
+    if (defined $e1) {
+        return 1 if defined $e2 and $e1 eq $e2;
+    }
+    else {
+        return 1 if !defined $e2;
+    }
+
+    return;
+}
+
+sub _type {
+    my ($self, $thing) = @_;
+
+    return '' if !ref $thing;
+
+    for my $type (qw/Regexp ARRAY HASH REF SCALAR GLOB CODE VSTRING/) {
+        return $type if UNIVERSAL::isa($thing, $type);
+    }
+
+    return '';
+}
+
+sub _format_stack {
+    my ($self, @stack) = @_;
+
+    my $var       = '$FOO';
+    my $did_arrow = 0;
+
+    for my $entry (@stack) {
+        my $type = $entry->{type} || '';
+        my $idx = $entry->{'idx'};
+        if($type eq 'HASH') {
+            $var .= "->" unless $did_arrow++;
+            $var .= "{$idx}";
+        }
+        elsif($type eq 'ARRAY') {
+            $var .= "->" unless $did_arrow++;
+            $var .= "[$idx]";
+        }
+        elsif($type eq 'REF') {
+            $var = "\${$var}";
+        }
+    }
+
+    my @vals = @{ $stack[-1]{vals} }[ 0, 1 ];
+    my @vars = ();
+
+    ( $vars[0] = $var ) =~ s/\$FOO/     \$got/;
+    ( $vars[1] = $var ) =~ s/\$FOO/\$expected/;
+
+    my $out = "Structures begin differing at:\n";
+
+    for my $idx (0 .. $#vals) {
+        my $val = $vals[$idx];
+        $vals[$idx]
+          = !defined $val     ? 'undef'
+          : $self->_dne($val) ? "Does not exist"
+          : ref $val          ? "$val"
+          :                     "'$val'";
+    }
+
+    $out .= "$vars[0] = $vals[0]\n";
+    $out .= "$vars[1] = $vals[1]\n";
+
+    $out =~ s/^/    /msg;
+
+    return $out;
+}
+
 {
     no warnings 'once';
     *expect = *expected;
@@ -763,6 +1020,14 @@ Checks to see if the given C<$got_object-E<gt>isa($class)>. Also checks to make 
 It works on references, too:
 
     $arr->got($array_ref)->expected('ARRAY')->isa_ok;
+
+=head3 is_deeply
+
+    $arr->got($ref1)->expected($ref2)->is_deeply;
+
+Compare references, it does a deep comparison walking each data structure to see if they are equivalent.
+
+This C<is_deeply> is mostly same as Test::More's one. You can use L<Test::Deep> more in-depth functionality along these lines.
 
 
 =head2 EXCEPTION TEST
