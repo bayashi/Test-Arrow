@@ -570,6 +570,9 @@ sub is_deeply {
     return $ok;
 }
 
+sub __same_ref { !(!ref $_[0] xor !ref $_[1]) }
+sub __not_ref  {  (!ref $_[0] and !ref $_[1]) }
+
 sub _deep_check {
     my ($self, $e1, $e2) = @_;
 
@@ -584,8 +587,8 @@ sub _deep_check {
         _tb->_unoverload_str(\$e1, \$e2);
 
         # Either they're both references or both not.
-        my $same_ref = !(!ref $e1 xor !ref $e2);
-        my $not_ref  =  (!ref $e1 and !ref $e2);
+        my $same_ref = __same_ref($e1, $e2);
+        my $not_ref  = __not_ref($e1, $e2);
 
         if (defined $e1 xor defined $e2) {
             $ok = FAIL;
@@ -601,7 +604,7 @@ sub _deep_check {
             $ok = PASS;
         }
         elsif ($not_ref) {
-            push @Data_Stack, { type => '', vals => [$e1, $e2] };
+            $self->_push_data_stack('', [$e1, $e2]);
             $ok = FAIL;
         }
         else {
@@ -612,43 +615,63 @@ sub _deep_check {
                 $Refs_Seen{$e1} = "$e2";
             }
 
-            my $type = $self->_type($e1);
-            $type = 'DIFFERENT' unless $self->_type($e2) eq $type;
-
-            if ($type eq 'DIFFERENT') {
-                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
-                $ok = FAIL;
-            }
-            elsif ($type eq 'ARRAY') {
-                $ok = $self->_eq_array($e1, $e2);
-            }
-            elsif ($type eq 'HASH') {
-                $ok = $self->_eq_hash($e1, $e2);
-            }
-            elsif ($type eq 'REF') {
-                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
-                $ok = $self->_deep_check($$e1, $$e2);
-                pop @Data_Stack if $ok;
-            }
-            elsif ($type eq 'SCALAR') {
-                push @Data_Stack, { type => 'REF', vals => [$e1, $e2] };
-                $ok = $self->_deep_check($$e1, $$e2);
-                pop @Data_Stack if $ok;
-            }
-            elsif ($type) {
-                push @Data_Stack, { type => $type, vals => [$e1, $e2] };
-                $ok = FAIL;
-            }
-            else {
-                die <<_WHOA_;
-WHOA!  No type in _deep_check
-This should never happen!  Please contact the author immediately!
-_WHOA_
-            }
+            $ok = $self->__deep_check_type($ok, $e1, $e2);
         }
     }
 
     return $ok;
+}
+
+sub __deep_check_type {
+    my ($self, $ok, $e1, $e2) = @_;
+
+    my $type = $self->_type($e1);
+    $type = 'DIFFERENT' unless $self->_type($e2) eq $type;
+
+    if ($type eq 'DIFFERENT') {
+        $self->_push_data_stack($type, [$e1, $e2]);
+        $ok = FAIL;
+    }
+    elsif ($type eq 'ARRAY') {
+        $ok = $self->_eq_array($e1, $e2);
+    }
+    elsif ($type eq 'HASH') {
+        $ok = $self->_eq_hash($e1, $e2);
+    }
+    elsif ($type eq 'REF') {
+        $self->_push_data_stack($type, [$e1, $e2]);
+        $ok = $self->_deep_check($$e1, $$e2);
+        pop @Data_Stack if $ok;
+    }
+    elsif ($type eq 'SCALAR') {
+        $self->_push_data_stack('REF', [$e1, $e2]);
+        $ok = $self->_deep_check($$e1, $$e2);
+        pop @Data_Stack if $ok;
+    }
+    elsif ($type) {
+        $self->_push_data_stack($type, [$e1, $e2]);
+        $ok = FAIL;
+    }
+    else {
+        die <<_WHOA_;
+WHOA!  No type in _deep_check
+This should never happen!  Please contact the author immediately!
+_WHOA_
+    }
+
+    return $ok;
+}
+
+sub _push_data_stack {
+    my ($self, $type, $vals, $idx) = @_;
+
+    my $hash = {};
+
+    $hash->{type} = $type if $type;
+    $hash->{vals} = $vals if $vals;
+    $hash->{idx}  = $idx  if $idx;
+
+    push @Data_Stack, $hash;
 }
 
 sub _eq_array {
@@ -670,7 +693,7 @@ sub _eq_array {
 
         next if $self->_equal_nonrefs($e1, $e2);
 
-        push @Data_Stack, { type => 'ARRAY', idx => $_, vals => [$e1, $e2] };
+        $self->_push_data_stack('ARRAY', [$e1, $e2], $_);
         $ok = $self->_deep_check($e1, $e2);
         pop @Data_Stack if $ok;
 
@@ -699,7 +722,7 @@ sub _eq_hash {
 
         next if $self->_equal_nonrefs($e1, $e2);
 
-        push @Data_Stack, { type => 'HASH', idx => $k, vals => [$e1, $e2] };
+        $self->_push_data_stack('HASH', [$e1, $e2], $k);
         $ok = $self->_deep_check($e1, $e2);
         pop @Data_Stack if $ok;
 
