@@ -16,6 +16,12 @@ sub import {
     my $pkg  = shift;
     my %args = map { $_ => 1 } @_;
 
+    {
+        my $caller = caller;
+        no strict 'refs'; ## no critic
+        *{"${caller}::done"} = \&done;
+    }
+
     $pkg->_import_option_no_strict(\%args);
     $pkg->_import_option_no_warnings(\%args);
     $pkg->_import_option_binary(\%args);
@@ -307,6 +313,10 @@ sub done_testing {
     _tb->done_testing(@_);
 
     $self;
+}
+
+sub done {
+    _tb->done_testing(@_);
 }
 
 # Mostly copied from Test::More::can_ok
@@ -824,8 +834,6 @@ sub _format_stack {
     *warning_ok = *warnings_ok;
 
     *warning = *warnings;
-
-    *done = *done_testing;
 }
 
 1;
@@ -1175,18 +1183,23 @@ If you call C<x> method, then the current values (name, expected and got) are du
     #   'name' => 'x test'
     # }
 
+=head3 done
+
+Declare of done testing. C<Test::Arrow> exports C<done> into your test script. You can call C<done> as function.
+
+    $arr->ok(1);
+
+    done();
+
 =head3 done_testing
 
-Declare of done testing.
+Same as C<done>. But done_testing is NOT exported. You should call C<done_testing> as class method or instance method.
 
     $arr->done_testing($number_of_tests_run);
     Test::Arrow->done_testing;
 
 B<Note> that you must never put C<done_testing> inside an C<END { ... }> block.
 
-=head3 done
-
-Alias of C<done_testing>
 
 =head2 CONSTANTS
 
