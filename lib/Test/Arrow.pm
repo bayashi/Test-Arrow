@@ -32,11 +32,13 @@ sub import {
         croak "Wrong option: " . join(", ", keys %args);
     }
 
-    if ($] < 5.014000) {
+    if ( _need_io_handle() ) {
         require IO::Handle;
         IO::Handle->import;
     }
 }
+
+sub _need_io_handle { $] < 5.014000 }
 
 sub _import_option_no_strict {
     my ($pkg, $args) = @_;
