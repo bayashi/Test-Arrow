@@ -1098,7 +1098,7 @@ It works on references, too:
 
 Compare references, it does a deep comparison walking each data structure to see if they are equivalent.
 
-This C<is_deeply> is mostly same as Test::More's one. You can use L<Test::Deep> more in-depth functionality along these lines.
+This C<is_deeply> is mostly same as Test::More's one. You can use L<Test::Deep> more in-depth functionality along these lines. Also L<Test::Deep::Matcher> is more better to use with.
 
 
 =head2 EXCEPTION TEST
