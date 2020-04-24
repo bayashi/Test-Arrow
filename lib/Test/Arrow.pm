@@ -21,6 +21,7 @@ sub import {
         my $caller = caller;
         no strict 'refs'; ## no critic
         *{"${caller}::done"} = \&done;
+        *{"${caller}::t"} = \&t;
     }
 
     $pkg->_import_option_no_strict(\%args);
@@ -80,6 +81,10 @@ sub new {
     }
 
     $self;
+}
+
+sub t {
+    return __PACKAGE__->new(@_);
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -874,6 +879,17 @@ Test::Arrow - Object-Oriented testing library
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
+    done;
+
+The function C<t> is exported as a shortcut for constructer. It initializes an instance for each.
+
+    use Test::Arrow;
+
+    t->got(1)->ok;
+
+    t->expect(uc 'foo')->to_be('FOO');
+
+    done;
 
 =head1 DESCRIPTION
 
@@ -947,6 +963,19 @@ It should be in constructor option or should be called as straightforward method
     $arr->plan(skip_all => 'Reason');
 
 =back
+
+=head3 t
+
+The function C<t> will be exported. It's initializer to get instance as shortcut.
+
+    my $arr = Test::Arrow;
+    $arr->got(1)->ok;
+
+Above test is same as below.
+
+    t->got(1)->ok;
+
+The function C<t> can get arguments as same as C<new>.
 
 =head2 SETTERS
 
