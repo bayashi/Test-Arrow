@@ -35,6 +35,18 @@ This is Perl module B<Test::Arrow>. It's Object-Oriented testing library.
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
+    done;
+
+The function C<t> is exported as a shortcut for constructer. It initializes an instance for each.
+
+    use Test::Arrow;
+
+    t->got(1)->ok;
+
+    t->expect(uc 'foo')->to_be('FOO');
+
+    done;
+
 
 =head1 INSTALLATION
 
