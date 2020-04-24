@@ -1,7 +1,6 @@
 package Test::Arrow;
 use strict;
 use warnings;
-use Carp qw/croak/;
 use Test::Builder::Module;
 use Test::Name::FromLine;
 use Text::MatchedPosition;
@@ -9,6 +8,16 @@ use Text::MatchedPosition;
 our $VERSION = '0.19';
 
 our @ISA = qw/Test::Builder::Module/;
+
+sub _carp {
+    my ($pkg, $file, $line) = caller;
+    return warn @_, " at $pkg, $file line $line\n";
+}
+
+sub _croak {
+    my ($pkg, $file, $line) = caller;
+    return die @_, " at $pkg, $file line $line\n";
+}
 
 sub PASS { 1 }
 sub FAIL { 0 }
@@ -29,14 +38,16 @@ sub import {
     $pkg->_import_option_binary(\%args);
 
     if (scalar(keys %args) > 0) {
-        croak "Wrong option: " . join(", ", keys %args);
+        _croak "Wrong option: " . join(", ", keys %args);
     }
 
-    if ($] < 5.014000) {
+    if ( _need_io_handle() ) {
         require IO::Handle;
         IO::Handle->import;
     }
 }
+
+sub _need_io_handle { $] < 5.014000 }
 
 sub _import_option_no_strict {
     my ($pkg, $args) = @_;
@@ -108,11 +119,6 @@ sub plan {
     return _tb->plan(@_);
 }
 
-sub _carp {
-    my ($file, $line) = ( caller(1) )[ 1, 2 ];
-    return warn @_, " at $file line $line\n";
-}
-
 sub skip {
     my ($self, $why, $how_many) = @_;
 
@@ -159,7 +165,7 @@ sub expected {
     my $arg_count = scalar(@_) - 1;
 
     if ($arg_count > 1) {
-        croak "'expected' method expects just only one arg. You passed $arg_count args.";
+        _croak "'expected' method expects just only one arg. You passed $arg_count args.";
     }
 
     $self->{_expected} = $value;
@@ -173,7 +179,7 @@ sub got {
     my $arg_count = scalar(@_) - 1;
 
     if ($arg_count > 1) {
-        croak "'got' method expects just only one arg. You passed $arg_count args.";
+        _croak "'got' method expects just only one arg. You passed $arg_count args.";
     }
 
     $self->{_got} = $value;
@@ -383,7 +389,7 @@ sub isa_ok {
     my ($result, $error) = _tb->_try(sub { $got->isa($expected) });
 
     if ($error) {
-        croak <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
+        _croak <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
 WHOA! I tried to call ->isa on your $whatami and got some weird error.
 Here's the error.
 $error
@@ -443,7 +449,7 @@ sub _get_isa_diag_name {
         $diag = "$test_name isn't a '$expected'";
     }
     else {
-        croak;
+        _croak;
     }
 
     return($diag, $name);
@@ -465,7 +471,7 @@ sub throw {
     my $self = shift;
     my $code = shift;
 
-    croak 'The `throw` method expects code ref.' unless ref $code eq 'CODE';
+    _croak 'The `throw` method expects code ref.' unless ref $code eq 'CODE';
 
     eval { $code->() };
 
@@ -524,7 +530,7 @@ sub warnings_ok {
 sub warnings {
     my ($self, $code, $regex, $name) = @_;
 
-    croak 'The `warn` method expects code ref.' unless ref $code eq 'CODE';
+    _croak 'The `warn` method expects code ref.' unless ref $code eq 'CODE';
 
     my @warns;
     eval {
@@ -679,7 +685,7 @@ sub __deep_check_type {
         $ok = FAIL;
     }
     else {
-        croak <<_WHOA_;
+        _croak <<_WHOA_;
 WHOA!  No type in _deep_check
 This should never happen!  Please contact the author immediately!
 _WHOA_
@@ -824,8 +830,7 @@ sub _format_stack {
           :                     "'$val'";
     }
 
-    $out .= "$vars[0] = $vals[0]\n";
-    $out .= "$vars[1] = $vals[1]\n";
+    $out .= "$vars[0] = $vals[0]\n" . "$vars[1] = $vals[1]\n";
 
     $out =~ s/^/    /msg;
 
@@ -881,7 +886,7 @@ Test::Arrow - Object-Oriented testing library
 
     done;
 
-The function C<t> is exported as a shortcut for constructer. It initializes an instance for each.
+The function C<t> is exported as a shortcut for constructor. It initializes an instance for each.
 
     use Test::Arrow;
 
