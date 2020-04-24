@@ -881,7 +881,7 @@ Test::Arrow - Object-Oriented testing library
 
     done;
 
-The function C<t> is exported as a shortcut for constructer. It initializes an instance for each.
+The function C<t> is exported as a shortcut for constructor. It initializes an instance for each.
 
     use Test::Arrow;
 
