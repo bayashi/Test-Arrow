@@ -830,8 +830,7 @@ sub _format_stack {
           :                     "'$val'";
     }
 
-    $out .= "$vars[0] = $vals[0]\n";
-    $out .= "$vars[1] = $vals[1]\n";
+    $out .= "$vars[0] = $vals[0]\n" . "$vars[1] = $vals[1]\n";
 
     $out =~ s/^/    /msg;
 
