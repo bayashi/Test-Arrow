@@ -3,6 +3,7 @@
 requires 'perl', '5.008005';
 requires 'strict';
 requires 'warnings';
+requires 'Carp';
 requires 'Test::Builder::Module';
 requires 'Test::Name::FromLine';
 requires 'Text::MatchedPosition';

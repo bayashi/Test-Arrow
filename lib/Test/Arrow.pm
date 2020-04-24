@@ -1,6 +1,7 @@
 package Test::Arrow;
 use strict;
 use warnings;
+use Carp qw/croak/;
 use Test::Builder::Module;
 use Test::Name::FromLine;
 use Text::MatchedPosition;
@@ -20,6 +21,7 @@ sub import {
         my $caller = caller;
         no strict 'refs'; ## no critic
         *{"${caller}::done"} = \&done;
+        *{"${caller}::t"} = \&t;
     }
 
     $pkg->_import_option_no_strict(\%args);
@@ -27,7 +29,7 @@ sub import {
     $pkg->_import_option_binary(\%args);
 
     if (scalar(keys %args) > 0) {
-        die "Wrong option: " . join(", ", keys %args);
+        croak "Wrong option: " . join(", ", keys %args);
     }
 
     if ($] < 5.014000) {
@@ -79,6 +81,10 @@ sub new {
     }
 
     $self;
+}
+
+sub t {
+    return __PACKAGE__->new(@_);
 }
 
 sub _tb { __PACKAGE__->builder }
@@ -153,7 +159,7 @@ sub expected {
     my $arg_count = scalar(@_) - 1;
 
     if ($arg_count > 1) {
-        die "'expected' method expects just only one arg. You passed $arg_count args.";
+        croak "'expected' method expects just only one arg. You passed $arg_count args.";
     }
 
     $self->{_expected} = $value;
@@ -167,7 +173,7 @@ sub got {
     my $arg_count = scalar(@_) - 1;
 
     if ($arg_count > 1) {
-        die "'got' method expects just only one arg. You passed $arg_count args.";
+        croak "'got' method expects just only one arg. You passed $arg_count args.";
     }
 
     $self->{_got} = $value;
@@ -377,7 +383,7 @@ sub isa_ok {
     my ($result, $error) = _tb->_try(sub { $got->isa($expected) });
 
     if ($error) {
-        die <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
+        croak <<WHOA unless $error =~ /^Can't (locate|call) method "isa"/;
 WHOA! I tried to call ->isa on your $whatami and got some weird error.
 Here's the error.
 $error
@@ -437,7 +443,7 @@ sub _get_isa_diag_name {
         $diag = "$test_name isn't a '$expected'";
     }
     else {
-        die;
+        croak;
     }
 
     return($diag, $name);
@@ -459,7 +465,7 @@ sub throw {
     my $self = shift;
     my $code = shift;
 
-    die 'The `throw` method expects code ref.' unless ref $code eq 'CODE';
+    croak 'The `throw` method expects code ref.' unless ref $code eq 'CODE';
 
     eval { $code->() };
 
@@ -518,7 +524,7 @@ sub warnings_ok {
 sub warnings {
     my ($self, $code, $regex, $name) = @_;
 
-    die 'The `warn` method expects code ref.' unless ref $code eq 'CODE';
+    croak 'The `warn` method expects code ref.' unless ref $code eq 'CODE';
 
     my @warns;
     eval {
@@ -673,7 +679,7 @@ sub __deep_check_type {
         $ok = FAIL;
     }
     else {
-        die <<_WHOA_;
+        croak <<_WHOA_;
 WHOA!  No type in _deep_check
 This should never happen!  Please contact the author immediately!
 _WHOA_
@@ -873,6 +879,17 @@ Test::Arrow - Object-Oriented testing library
     $arr->warnings(sub { warn 'Bar' })->catch(qr/^Ba/);
     $arr->throw(sub { die 'Baz' })->catch(qr/^Ba/);
 
+    done;
+
+The function C<t> is exported as a shortcut for constructer. It initializes an instance for each.
+
+    use Test::Arrow;
+
+    t->got(1)->ok;
+
+    t->expect(uc 'foo')->to_be('FOO');
+
+    done;
 
 =head1 DESCRIPTION
 
@@ -946,6 +963,19 @@ It should be in constructor option or should be called as straightforward method
     $arr->plan(skip_all => 'Reason');
 
 =back
+
+=head3 t
+
+The function C<t> will be exported. It's initializer to get instance as shortcut.
+
+    my $arr = Test::Arrow;
+    $arr->got(1)->ok;
+
+Above test is same as below.
+
+    t->got(1)->ok;
+
+The function C<t> can get arguments as same as C<new>.
 
 =head2 SETTERS
 
