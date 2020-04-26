@@ -936,7 +936,7 @@ The constructor.
 
 =item no_x
 
-If you set C<no_x> option the ture value, then the C<x> method doesn't show any message.
+If you set C<no_x> option the true value, then the C<x> method doesn't show any message.
 
 =item plan
 
