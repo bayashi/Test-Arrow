@@ -1,4 +1,4 @@
-name: linux_old_versions
+name: linux
 
 on:
   push:
@@ -23,6 +23,7 @@ jobs:
           - '5.8'
           - '5.18'
           - '5.28'
+          - '5.32'
 
     container:
       image: perl:${{ matrix.perl-version }}
