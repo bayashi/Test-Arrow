@@ -23,7 +23,7 @@ jobs:
           - '5.12'
           - '5.18'
           - '5.28'
-          - '5.32'
+          - '5.38'
 
     container:
       image: perl:${{ matrix.perl-version }}
